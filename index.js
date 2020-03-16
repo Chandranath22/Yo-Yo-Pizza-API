@@ -159,3 +159,6 @@ async function validation(details, trackOrder) {
 app.listen(process.env.PORT || 5000, () => {
     console.log(`app is running on port ${process.env.PORT}`);
 });
+// app.listen(process.env.PORT || 5000, () => {
+//     console.log(`app is running on port ${process.env.PORT}`);
+// });
