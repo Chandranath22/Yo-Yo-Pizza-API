@@ -105,38 +105,57 @@ async function runSample(text, projectId = 'yo-yo-pizza-gdkyia') {
             Phone = '';
             result.fulfillmentText = `Your order id is ${orderID}.\n` + result.fulfillmentText;
         }
+        return result.fulfillmentText;
 
     } else if (result.intent.displayName === 'trackOrder') {
         if (result.parameters.fields.orderID.stringValue) {
             trackOrder = result.parameters.fields.orderID.stringValue;
         }
+
+        if (!result.parameters.fields.orderID.stringValue) {
+            return result.fulfillmentText;
+        }
+
         if (result.parameters.fields.email.stringValue) {
             Email = result.parameters.fields.email.stringValue;
         }
 
+        if (!result.parameters.fields.email.stringValue) {
+            return result.fulfillmentText;
+        }
+
         if (trackOrder && Email) {
             const details = db.collection('Users').doc(Email);
-            details.get()
-                .then(doc => {
-                    if (!doc.exists) {
-                        console.log("Invalid email");
-                    } else {
-                        const orders = doc.data().orderID;
-                        const found = orders.find(element => element === trackOrder);
-                        if (!found) {
-                            console.log("invalid order id");
-                        }
-                    }
-                })
-                .catch(err => {
-                    console.log("Sorry some thing is not right");
-                    process.exit();
-                })
+            const response = await validation(details, trackOrder);
+            result.fulfillmentText = response;
+            return result.fulfillmentText;
         }
+    } else {
+        return result.fulfillmentText;
     }
-    return result.fulfillmentText;
 }
 
-app.listen(process.env.PORT || 5000, () => {
-    console.log(`app is running on port ${process.env.PORT}`);
+async function validation(details, trackOrder) {
+    details.get()
+        .then(doc => {
+            if (!doc.exists) {
+                console.log("Invalid email");
+                return "Invalid email";
+            } else {
+                const orders = doc.data().orderID;
+                const found = orders.find(element => element === trackOrder);
+                if (!found) {
+                    console.log("invalid order id");
+                    return "invalid order id"
+                }
+                return `Your order with order id ${trackOrder} will be delivered in 10 mins`;
+            }
+        })
+}
+
+app.listen(5000, () => {
+    console.log(`app is running on port 5000`);
 });
+// app.listen(process.env.PORT || 5000, () => {
+//     console.log(`app is running on port ${process.env.PORT}`);
+// });
